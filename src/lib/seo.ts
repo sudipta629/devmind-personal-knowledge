@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SITE_CONFIG } from '@/constants/site';
+import { metadata } from '@/app/layout';
 
 interface GenerateMetadataOptions {
   title?: string;
@@ -28,7 +29,7 @@ export function generateMetadata({
   const metaUrl = url || SITE_CONFIG.url;
 
   return {
-    title: metaTitle,
+     title: metaTitle,
     description: metaDescription,
     keywords: tags ?? [...SITE_CONFIG.keywords],
     authors: [{ name: SITE_CONFIG.author.name }],

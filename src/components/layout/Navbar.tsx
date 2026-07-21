@@ -54,8 +54,8 @@ export function Navbar() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-violet-600 shadow-sm group-hover:shadow-glow transition-shadow">
               <BookOpen className="h-4 w-4 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Dev<span className="text-gradient">Mind</span>
+            <span className="text-xl font-bold tracking-tight text-[#CCE5FF]">
+              Bappaditya Roy
             </span>
           </Link>
 

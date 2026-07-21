@@ -81,7 +81,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
         <div className="absolute bottom-0 left-0 right-0 border-t border-slate-100 p-4 dark:border-slate-800">
           <p className="text-center text-xs text-slate-400">
-            © 2025 DevMind. All rights reserved.
+            © 2025 Bappaditya Roy. All rights reserved.
           </p>
         </div>
       </div>

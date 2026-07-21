@@ -123,9 +123,9 @@ public class ExampleController {
         </section>
       ))}
       {(article.tableOfContents ?? []).length === 0 && (
-        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-          {article.description} Full article content will be rendered here from MDX files or your backend API.
-        </p>
+        <div className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+          {article.content ? article.content : article.description}
+        </div>
       )}
     </div>
   );
