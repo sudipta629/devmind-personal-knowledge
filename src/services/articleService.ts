@@ -1,141 +1,116 @@
-/**
- * Article Service
- *
- * All data fetching for articles goes through this service.
- * Currently returns mock data — replace function bodies with real API calls
- * when backend is ready. UI components should NEVER be changed.
- */
-
 import type { Article, ArticleListItem, ArticleFilters, PaginatedArticles } from '@/types';
-import { MOCK_ARTICLES } from '@/lib/mockData';
 import { PAGINATION } from '@/constants/site';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+
 function toListItem(article: Article): ArticleListItem {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { content: _c, tableOfContents: _toc, ...rest } = article;
-  return rest;
+  const { content, tableOfContents, ...rest } = article;
+  return rest as ArticleListItem;
 }
 
-
-/**
- * Get a paginated list of articles with optional filters.
- * Replace with: GET /api/articles?category=&tag=&search=&page=&limit=
- */
 export async function getArticles(filters: ArticleFilters = {}): Promise<PaginatedArticles> {
-  const {
-    category,
-    tag,
-    search,
-    page = 1,
-    limit = PAGINATION.defaultLimit,
-    featured,
-  } = filters;
+  const params = new URLSearchParams();
+  if (filters.category) params.append('category', filters.category);
+  if (filters.tag) params.append('tag', filters.tag);
+  if (filters.search) params.append('search', filters.search);
+  params.append('status', 'PUBLISHED'); // Always fetch published unless specified
 
-  let articles = MOCK_ARTICLES.map(toListItem);
+  const res = await fetch(`${API_BASE}/articles?${params.toString()}`, { cache: 'no-store' });
+  let articles: Article[] = await res.json();
 
-  if (category) {
-    articles = articles.filter((a) => a.categorySlug === category);
-  }
-  if (tag) {
-    articles = articles.filter((a) => a.tags.includes(tag));
-  }
-  if (featured !== undefined) {
-    articles = articles.filter((a) => a.featured === featured);
-  }
-  if (search) {
-    const q = search.toLowerCase();
-    articles = articles.filter(
-      (a) =>
-        a.title.toLowerCase().includes(q) ||
-        a.description.toLowerCase().includes(q) ||
-        a.tags.some((t) => t.includes(q))
+  if (filters.search) {
+    const q = filters.search.toLowerCase();
+    articles = articles.filter(a => 
+      a.title.toLowerCase().includes(q) || 
+      a.description.toLowerCase().includes(q) || 
+      a.tags.some(t => t.toLowerCase().includes(q)) ||
+      a.author.name.toLowerCase().includes(q)
     );
   }
+  
+  if (filters.featured !== undefined) {
+    articles = articles.filter(a => a.featured === filters.featured);
+  }
 
-  const total = articles.length;
+  const listItems = articles.map(toListItem);
+  const page = filters.page || 1;
+  const limit = filters.limit || PAGINATION.defaultLimit;
+  const total = listItems.length;
   const start = (page - 1) * limit;
-  const paginated = articles.slice(start, start + limit);
+  const paginated = listItems.slice(start, start + limit);
 
-  return {
-    articles: paginated,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-  };
+  return { articles: paginated, total, page, limit, totalPages: Math.ceil(total / limit) };
 }
 
-/**
- * Get a single article by slug including full content.
- * Replace with: GET /api/articles/:slug
- */
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
-  const article = MOCK_ARTICLES.find((a) => a.slug === slug);
-  return article ?? null;
+  try {
+    const res = await fetch(`${API_BASE}/articles/${slug}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
-/**
- * Get featured articles.
- * Replace with: GET /api/articles?featured=true&limit=N
- */
 export async function getFeaturedArticles(limit = PAGINATION.featuredLimit): Promise<ArticleListItem[]> {
-  const featured = MOCK_ARTICLES.filter((a) => a.featured).map(toListItem);
-  return featured.slice(0, limit);
+  const res = await getArticles({ featured: true, limit });
+  return res.articles;
 }
 
-/**
- * Get the latest articles sorted by date.
- * Replace with: GET /api/articles?sort=publishedAt&order=desc&limit=N
- */
 export async function getLatestArticles(limit = 6): Promise<ArticleListItem[]> {
-  return [...MOCK_ARTICLES]
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+  const res = await getArticles({ limit });
+  return res.articles;
+}
+
+export async function getRelatedArticles(slug: string, limit = PAGINATION.relatedLimit): Promise<ArticleListItem[]> {
+  const current = await getArticleBySlug(slug);
+  if (!current) return [];
+  
+  const allParams = new URLSearchParams({ status: 'PUBLISHED' });
+  const res = await fetch(`${API_BASE}/articles?${allParams.toString()}`, { cache: 'no-store' });
+  const all: Article[] = await res.json();
+  
+  return all
+    .filter(a => a.slug !== slug && (a.categorySlug === current.categorySlug || a.tags.some(t => current.tags.includes(t))))
     .slice(0, limit)
     .map(toListItem);
 }
 
-/**
- * Get related articles by matching category or tags.
- * Replace with: GET /api/articles/:slug/related
- */
-export async function getRelatedArticles(
-  slug: string,
-  limit = PAGINATION.relatedLimit
-): Promise<ArticleListItem[]> {
-  const article = MOCK_ARTICLES.find((a) => a.slug === slug);
-  if (!article) return [];
-
-  return MOCK_ARTICLES.filter(
-    (a) =>
-      a.slug !== slug &&
-      (a.categorySlug === article.categorySlug ||
-        a.tags.some((t) => article.tags.includes(t)))
-  )
-    .slice(0, limit)
-    .map(toListItem);
-}
-
-/**
- * Get all article slugs — used for static generation.
- * Replace with: GET /api/articles/slugs
- */
 export async function getAllArticleSlugs(): Promise<string[]> {
-  return MOCK_ARTICLES.map((a) => a.slug);
+  const allParams = new URLSearchParams({ status: 'PUBLISHED' });
+  const res = await fetch(`${API_BASE}/articles?${allParams.toString()}`, { cache: 'no-store' });
+  const all: Article[] = await res.json();
+  return all.map(a => a.slug);
 }
 
-/**
- * Get previous and next articles for navigation.
- * Replace with: GET /api/articles/:slug/navigation
- */
-export async function getArticleNavigation(slug: string): Promise<{
-  previous: ArticleListItem | null;
-  next: ArticleListItem | null;
-}> {
-  const index = MOCK_ARTICLES.findIndex((a) => a.slug === slug);
+export async function getArticleNavigation(slug: string): Promise<{ previous: ArticleListItem | null; next: ArticleListItem | null; }> {
+  const allParams = new URLSearchParams({ status: 'PUBLISHED' });
+  const res = await fetch(`${API_BASE}/articles?${allParams.toString()}`, { cache: 'no-store' });
+  const all: Article[] = await res.json();
+  
+  const index = all.findIndex((a) => a.slug === slug);
   if (index === -1) return { previous: null, next: null };
-
   return {
-    previous: index > 0 ? toListItem(MOCK_ARTICLES[index - 1]) : null,
-    next: index < MOCK_ARTICLES.length - 1 ? toListItem(MOCK_ARTICLES[index + 1]) : null,
+    previous: index > 0 ? toListItem(all[index - 1]) : null,
+    next: index < all.length - 1 ? toListItem(all[index + 1]) : null,
   };
+}
+
+export async function getMyArticles(authorId: string): Promise<Article[]> {
+  const res = await fetch(`${API_BASE}/articles?authorId=${authorId}`, { cache: 'no-store' });
+  return await res.json();
+}
+
+export async function publishArticle(data: Partial<Article>): Promise<Article> {
+  const res = await fetch(`${API_BASE}/articles`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('Failed to publish article');
+  return await res.json();
+}
+
+export async function deleteArticle(id: string): Promise<void> {
+  await fetch(`${API_BASE}/articles/${id}`, { method: 'DELETE' });
 }

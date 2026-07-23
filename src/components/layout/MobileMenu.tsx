@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { NAV_LINKS } from '@/constants/navigation';
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface MobileMenuProps {
 
 export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const pathname = usePathname();
+  const { user, openLoginModal, openRegisterModal } = useAuth();
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -79,9 +81,26 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           </ul>
         </nav>
 
+        {!user && (
+          <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+            <button
+              onClick={() => { onClose(); openLoginModal(); }}
+              className="w-full rounded-xl px-4 py-3 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
+            >
+              Login
+            </button>
+            <button
+              onClick={() => { onClose(); openRegisterModal(); }}
+              className="w-full rounded-xl px-4 py-3 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 transition-colors"
+            >
+              Register
+            </button>
+          </div>
+        )}
+
         <div className="absolute bottom-0 left-0 right-0 border-t border-slate-100 p-4 dark:border-slate-800">
           <p className="text-center text-xs text-slate-400">
-            © 2025 DevMind. All rights reserved.
+            © 2025 Sudipta. All rights reserved.
           </p>
         </div>
       </div>

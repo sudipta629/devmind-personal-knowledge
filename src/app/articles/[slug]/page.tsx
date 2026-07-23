@@ -8,6 +8,11 @@ import { RelatedArticles } from '@/components/articles/RelatedArticles';
 import { ArticleNavigation } from '@/components/articles/ArticleNavigation';
 import { SITE_CONFIG } from '@/constants/site';
 import { ScrollProgressBar } from '@/components/articles/ScrollProgressBar';
+import { AuthorSection } from '@/components/articles/AuthorSection';
+import { ArticleEngagement } from '@/components/articles/ArticleEngagement';
+import { CommentsSection } from '@/components/articles/CommentsSection';
+import { MoreFromAuthor } from '@/components/articles/MoreFromAuthor';
+import { getMyArticles } from '@/services/articleService';
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -45,6 +50,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   if (!article) notFound();
 
+  const authorArticles = await getMyArticles(article.author.id);
+  const moreFromAuthor = authorArticles.filter(a => a.id !== article.id && a.status === 'PUBLISHED').slice(0, 3);
+
   const tocItems = article.tableOfContents ?? [];
 
   return (
@@ -64,6 +72,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <article className="min-w-0 flex-1">
             <ArticleHeader article={article} />
 
+            <AuthorSection initialAuthor={article.author} />
+
             {/* Mobile TOC */}
             {tocItems.length > 0 && <TableOfContents items={tocItems} />}
 
@@ -72,11 +82,19 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <ArticleBody article={article} />
             </div>
 
+            <ArticleEngagement article={article} />
+
             <ArticleNavigation previous={navigation.previous} next={navigation.next} />
+
+            <CommentsSection articleSlug={article.slug} />
           </article>
         </div>
 
         <RelatedArticles articles={relatedArticles} />
+        
+        {moreFromAuthor.length > 0 && (
+          <MoreFromAuthor articles={moreFromAuthor} authorName={article.author.name} />
+        )}
       </div>
     </>
   );
@@ -115,7 +133,7 @@ public class ExampleController {
     
     @GetMapping("/hello")
     public ResponseEntity<String> hello() {
-        return ResponseEntity.ok("Hello, DevMind!");
+        return ResponseEntity.ok("Hello, Sudipto!");
     }
 }`}</code>
             </pre>

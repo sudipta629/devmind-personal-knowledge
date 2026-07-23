@@ -38,8 +38,10 @@ function DefaultArticleCard({
         className
       )}
     >
+      <Link href={`/articles/${article.slug}`} className="absolute inset-0 z-0" aria-label={`Read ${article.title}`} />
+      
       {/* Thumbnail */}
-      <Link href={`/articles/${article.slug}`} className="relative block overflow-hidden" tabIndex={-1}>
+      <div className="relative z-10 block overflow-hidden" tabIndex={-1}>
         <div className="relative h-48 w-full overflow-hidden">
           <Image
             src={article.thumbnail}
@@ -48,21 +50,21 @@ function DefaultArticleCard({
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
         </div>
-      </Link>
+      </div>
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-5">
         {/* Category */}
-        <div className="mb-2">
+        <div className="mb-2 relative z-10 w-fit">
           <Link href={`/categories/${article.categorySlug}`}>
             <Badge variant="category">{article.category}</Badge>
           </Link>
         </div>
 
         {/* Title */}
-        <h2 className="mb-2 line-clamp-2 text-base font-bold leading-snug text-slate-900 transition-colors group-hover:text-brand-600 dark:text-slate-100 dark:group-hover:text-brand-400">
+        <h2 className="mb-2 line-clamp-2 text-base font-bold leading-snug text-slate-900 transition-colors group-hover:text-brand-600 dark:text-slate-100 dark:group-hover:text-brand-400 relative z-10">
           <Link href={`/articles/${article.slug}`}>{article.title}</Link>
         </h2>
 
@@ -72,7 +74,7 @@ function DefaultArticleCard({
         </p>
 
         {/* Tags */}
-        <div className="mb-4 flex flex-wrap gap-1.5">
+        <div className="mb-4 flex flex-wrap gap-1.5 relative z-10">
           {article.tags.slice(0, 3).map((tag) => (
             <Link key={tag} href={`/tags/${tag}`}>
               <Badge variant="tag">#{tag}</Badge>
@@ -81,7 +83,7 @@ function DefaultArticleCard({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800 relative z-10 gap-3">
           <div className="flex items-center gap-2">
             <Image
               src={article.author.avatar}
@@ -90,14 +92,23 @@ function DefaultArticleCard({
               height={28}
               className="rounded-full ring-2 ring-white dark:ring-slate-900"
             />
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-              {article.author.name}
-            </span>
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                {article.author.name}
+              </span>
+              <span className="text-[10px] text-slate-400">
+                {formatDate(article.publishedAt)}
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-3 text-xs text-slate-400">
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               {formatReadingTime(article.readingTime)}
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              <span className="font-medium">{article.views?.toLocaleString() || 0}</span> views
             </span>
           </div>
         </div>

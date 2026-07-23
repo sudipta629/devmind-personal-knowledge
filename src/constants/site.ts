@@ -1,9 +1,9 @@
 export const SITE_CONFIG = {
-  name: 'DevMind',
-  title: 'DevMind — Software Engineering & Technical Education',
+  name: 'Sudipto',
+  title: 'Sudipto — Software Engineering & Technical Education',
   description:
     'A personal knowledge base covering software engineering, system design, AI, Java, Spring Boot, Microservices, Kafka, and more. Learn, explore, and grow.',
-  url: 'https://devmind.dev',
+  url: 'https://sudipto.dev',
   author: {
     name: 'Alex Chen',
     bio: 'Senior Software Engineer with 8+ years of experience. Passionate about distributed systems, clean architecture, and teaching complex concepts simply.',
@@ -11,7 +11,7 @@ export const SITE_CONFIG = {
     github: 'https://github.com/alexchen',
     twitter: 'https://twitter.com/alexchen',
     linkedin: 'https://linkedin.com/in/alexchen',
-    email: 'alex@devmind.dev',
+    email: 'alex@sudipto.dev',
   },
   ogImage: '/og-image.png',
   twitterHandle: '@alexchen',

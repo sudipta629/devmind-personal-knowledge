@@ -1,41 +1,29 @@
-/**
- * Category Service
- *
- * All data fetching for categories goes through this service.
- * Replace mock implementations with API calls when backend is ready.
- */
-
 import type { Category } from '@/types';
-import { CATEGORIES } from '@/constants/categories';
 
-/**
- * Get all categories.
- * Replace with: GET /api/categories
- */
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+
 export async function getCategories(): Promise<Category[]> {
-  return CATEGORIES;
+  try {
+    const res = await fetch(`${API_BASE}/categories`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (error) {
+    console.error('Failed to fetch categories:', error);
+    return [];
+  }
 }
 
-/**
- * Get a single category by slug.
- * Replace with: GET /api/categories/:slug
- */
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
-  return CATEGORIES.find((c) => c.slug === slug) ?? null;
+  const categories = await getCategories();
+  return categories.find((c) => c.slug === slug) ?? null;
 }
 
-/**
- * Get featured categories for the home page.
- * Replace with: GET /api/categories?featured=true
- */
 export async function getFeaturedCategories(limit = 6): Promise<Category[]> {
-  return CATEGORIES.filter((c) => c.featured).slice(0, limit);
+  const categories = await getCategories();
+  return categories.filter((c) => c.featured).slice(0, limit);
 }
 
-/**
- * Get all category slugs — used for static generation.
- * Replace with: GET /api/categories/slugs
- */
 export async function getAllCategorySlugs(): Promise<string[]> {
-  return CATEGORIES.map((c) => c.slug);
+  const categories = await getCategories();
+  return categories.map((c) => c.slug);
 }

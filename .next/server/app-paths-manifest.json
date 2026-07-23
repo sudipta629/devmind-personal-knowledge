@@ -1,8 +1,12 @@
 {
+  "/api/articles/route": "app/api/articles/route.js",
+  "/api/categories/route": "app/api/categories/route.js",
+  "/api/tags/route": "app/api/tags/route.js",
+  "/api/articles/[slug]/route": "app/api/articles/[slug]/route.js",
   "/page": "app/page.js",
-  "/categories/[slug]/page": "app/categories/[slug]/page.js",
-  "/articles/[slug]/page": "app/articles/[slug]/page.js",
-  "/about/page": "app/about/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/articles/page": "app/articles/page.js",
-  "/_not-found/page": "app/_not-found/page.js"
+  "/articles/[slug]/page": "app/articles/[slug]/page.js",
+  "/about/page": "app/about/page.js"
 }

@@ -18,7 +18,7 @@ export function Footer() {
                 <BookOpen className="h-4 w-4 text-white" />
               </div>
               <span className="text-xl font-bold text-slate-900 dark:text-white">
-                Dev<span className="text-gradient">Mind</span>
+                Sudi<span className="text-gradient">pto</span>
               </span>
             </Link>
             <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
@@ -120,7 +120,7 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 py-6 text-sm text-slate-400 dark:border-slate-800 sm:flex-row">
-          <p>© {currentYear} DevMind by {SITE_CONFIG.author.name}. All rights reserved.</p>
+          <p>© {currentYear} Sudipto by {SITE_CONFIG.author.name}. All rights reserved.</p>
           <p className="flex items-center gap-1.5">
             Made with <Heart className="h-3.5 w-3.5 text-red-500" fill="currentColor" /> for the dev community
           </p>

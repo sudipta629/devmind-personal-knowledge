@@ -1,43 +1,29 @@
-/**
- * Tag Service
- *
- * All data fetching for tags goes through this service.
- * Replace mock implementations with API calls when backend is ready.
- */
-
 import type { Tag } from '@/types';
-import { MOCK_TAGS } from '@/lib/mockData';
 
-/**
- * Get all tags.
- * Replace with: GET /api/tags
- */
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+
 export async function getTags(): Promise<Tag[]> {
-  return MOCK_TAGS;
+  try {
+    const res = await fetch(`${API_BASE}/tags`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (error) {
+    console.error('Failed to fetch tags:', error);
+    return [];
+  }
 }
 
-/**
- * Get a single tag by slug.
- * Replace with: GET /api/tags/:slug
- */
 export async function getTagBySlug(slug: string): Promise<Tag | null> {
-  return MOCK_TAGS.find((t) => t.slug === slug) ?? null;
+  const tags = await getTags();
+  return tags.find((t) => t.slug === slug) ?? null;
 }
 
-/**
- * Get the most popular tags by article count.
- * Replace with: GET /api/tags?sort=articleCount&order=desc&limit=N
- */
-export async function getPopularTags(limit = 15): Promise<Tag[]> {
-  return [...MOCK_TAGS]
-    .sort((a, b) => b.articleCount - a.articleCount)
-    .slice(0, limit);
+export async function getPopularTags(limit = 10): Promise<Tag[]> {
+  const tags = await getTags();
+  return [...tags].sort((a, b) => b.articleCount - a.articleCount).slice(0, limit);
 }
 
-/**
- * Get all tag slugs — used for static generation.
- * Replace with: GET /api/tags/slugs
- */
 export async function getAllTagSlugs(): Promise<string[]> {
-  return MOCK_TAGS.map((t) => t.slug);
+  const tags = await getTags();
+  return tags.map((t) => t.slug);
 }

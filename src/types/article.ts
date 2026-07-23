@@ -25,6 +25,7 @@ export interface Article {
   featured: boolean;
   views?: number;
   tableOfContents?: TOCItem[];
+  status?: 'PUBLISHED' | 'DRAFT';
 }
 
 export interface TOCItem {

@@ -1,4 +1,4 @@
-# DevMind — Personal Knowledge Website
+# Sudipto — Personal Knowledge Website
 
 A production-ready, scalable personal knowledge website built with **Next.js 15 App Router**, **TypeScript**, and **Tailwind CSS**. Inspired by Medium but focused on software engineering and technical education.
 
@@ -153,7 +153,7 @@ Edit `src/constants/site.ts` to customize:
 
 ```ts
 export const SITE_CONFIG = {
-  name: 'DevMind',           // Site name
+  name: 'Sudipto',           // Site name
   author: {
     name: 'Alex Chen',       // Your name
     bio: '...',              // Your bio
@@ -162,7 +162,7 @@ export const SITE_CONFIG = {
     linkedin: '...',         // Your LinkedIn
     email: '...',            // Your email
   },
-  url: 'https://devmind.dev', // Production URL
+  url: 'https://sudipto.dev', // Production URL
 };
 ```
 
