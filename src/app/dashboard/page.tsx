@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getMyArticles, deleteArticle } from '@/services/articleService';
 import { getUserBookmarks } from '@/services/bookmarkService';
-import { getFollowersCount } from '@/services/followService';
+import { useFollow } from '@/contexts/FollowContext';
 import type { Article } from '@/types';
 import { LayoutDashboard, BookOpen, PenTool, Bookmark, Settings, FileText, Trash2, Edit, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [articles, setArticles] = useState<Article[]>([]);
   const [bookmarks, setBookmarks] = useState<Article[]>([]);
-  const [followers, setFollowers] = useState(0);
+  const { followersCount, followingCount, initializeAuthorState } = useFollow();
 
   useEffect(() => {
     setActiveTab(searchParams.get('tab') || 'overview');
@@ -29,9 +29,9 @@ export default function DashboardPage() {
     if (user) {
       getMyArticles(user.id).then(setArticles);
       getUserBookmarks(user.id).then(setBookmarks);
-      getFollowersCount(user.id).then(setFollowers);
+      initializeAuthorState(user.id);
     }
-  }, [user]);
+  }, [user, initializeAuthorState]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
@@ -113,7 +113,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20">
                   <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Followers</p>
-                  <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{followers.toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{user ? followersCount(user.id).toLocaleString() : 0}</p>
                 </div>
                 <div className="p-6 rounded-2xl bg-violet-50 dark:bg-violet-900/10 border border-violet-100 dark:border-violet-900/20">
                   <p className="text-sm font-medium text-violet-600 dark:text-violet-400">Drafts</p>

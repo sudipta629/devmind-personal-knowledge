@@ -3,8 +3,10 @@ import { getAuthorProfile } from '@/services/authorService';
 import { getMyArticles } from '@/services/articleService';
 import { getFollowersCount, getFollowingCount } from '@/services/followService';
 import { Button } from '@/components/ui/Button';
-import { MapPin, Link as LinkIcon, Calendar, Github, Twitter, Linkedin, Share2, UserPlus } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Calendar, Github, Twitter, Linkedin, Share2 } from 'lucide-react';
 import Link from 'next/link';
+import { ProfileFollowButton } from '@/components/profile/ProfileFollowButton';
+import { ProfileFollowersCount } from '@/components/profile/ProfileFollowersCount';
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;
@@ -70,9 +72,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             <Button variant="outline" className="gap-2 rounded-xl">
               <Share2 className="h-4 w-4" /> Share
             </Button>
-            <Button className="gap-2 rounded-xl">
-              <UserPlus className="h-4 w-4" /> Follow
-            </Button>
+            <ProfileFollowButton authorId={profile.id} />
           </div>
         </div>
 
@@ -119,7 +119,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                <div className="text-2xl font-bold text-slate-900 dark:text-white">{followers.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                  <ProfileFollowersCount authorId={profile.id} initialCount={followers} />
+                </div>
                 <div className="text-sm font-medium text-slate-500">Followers</div>
               </div>
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { followAuthor, isFollowing } from '@/services/followService';
+import { useFollow } from '@/contexts/FollowContext';
 import { Button } from '@/components/ui/Button';
 import { UserPlus, UserCheck } from 'lucide-react';
 import { getAuthorProfile } from '@/services/authorService';
@@ -11,9 +11,9 @@ import Link from 'next/link';
 
 export function AuthorSection({ initialAuthor }: { initialAuthor: Author }) {
   const { user, openLoginModal } = useAuth();
+  const { isUserFollowing, toggleFollow, initializeAuthorState, followersCount } = useFollow();
   const [author, setAuthor] = useState(initialAuthor);
-  const [following, setFollowing] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Fetch real author profile in case it changed
@@ -23,12 +23,12 @@ export function AuthorSection({ initialAuthor }: { initialAuthor: Author }) {
   }, [initialAuthor]);
 
   useEffect(() => {
-    if (user && author) {
-      isFollowing(user.id, author.id).then(setFollowing).finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+    if (author) {
+      initializeAuthorState(author.id);
     }
-  }, [user, author]);
+  }, [author, initializeAuthorState]);
+
+  const following = isUserFollowing(author.id);
 
   const handleFollow = async () => {
     if (!user) {
@@ -36,15 +36,8 @@ export function AuthorSection({ initialAuthor }: { initialAuthor: Author }) {
       return;
     }
     setLoading(true);
-    try {
-      await followAuthor(user.id, author.id);
-      setFollowing(true);
-      // Optimistically update followers (in reality we'd refetch)
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+    await toggleFollow(author.id);
+    setLoading(false);
   };
 
   return (
@@ -58,7 +51,10 @@ export function AuthorSection({ initialAuthor }: { initialAuthor: Author }) {
             <h3 className="text-xl font-bold text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
               <Link href={`/@${author.name}`}>{author.name}</Link>
             </h3>
-            <p className="text-sm text-slate-500">@{author.name.toLowerCase().replace(/\s/g, '')}</p>
+            <p className="text-sm text-slate-500 mb-1">@{author.name.toLowerCase().replace(/\s/g, '')}</p>
+            <p className="text-xs font-medium text-slate-400">
+              {followersCount(author.id).toLocaleString()} Followers
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
