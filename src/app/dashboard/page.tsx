@@ -7,8 +7,9 @@ import { getMyArticles, deleteArticle } from '@/services/articleService';
 import { getUserBookmarks } from '@/services/bookmarkService';
 import { useFollow } from '@/contexts/FollowContext';
 import type { Article } from '@/types';
-import { LayoutDashboard, BookOpen, PenTool, Bookmark, Settings, FileText, Trash2, Edit, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, BookOpen, PenTool, Bookmark, Settings, FileText, Trash2, Edit, ExternalLink, Menu, X, Bell } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
@@ -19,6 +20,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [articles, setArticles] = useState<Article[]>([]);
   const [bookmarks, setBookmarks] = useState<Article[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { followersCount, followingCount, initializeAuthorState } = useFollow();
 
   useEffect(() => {
@@ -59,30 +61,110 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-24 pt-32 sm:px-6 flex flex-col md:flex-row gap-8">
-      {/* Sidebar */}
-      <aside className="w-full md:w-64 shrink-0">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-4 sticky top-24">
-          <div className="mb-6 px-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate">Dashboard</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 truncate">Welcome back, {user.fullName?.split(' ')[0]}</p>
+    <div className="mx-auto max-w-7xl px-4 py-20 pt-28 sm:px-6 flex flex-col md:flex-row gap-8">
+      
+      {/* Mobile Header (Only visible on < md) */}
+      <div className="md:hidden flex items-center justify-between bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2 -ml-2 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+          <h1 className="text-lg font-bold text-slate-900 dark:text-white">Dashboard</h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors">
+            <Bell className="h-5 w-5" />
+          </button>
+          <div className="h-8 w-8 rounded-full overflow-hidden bg-brand-500">
+            {user.avatar ? (
+              <img src={user.avatar} alt="User" className="h-full w-full object-cover" />
+            ) : (
+              <span className="flex h-full items-center justify-center text-white text-xs font-bold">
+                {user.fullName?.[0]?.toUpperCase()}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Backdrop for mobile drawer */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] md:hidden transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Responsive Sidebar / Drawer */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-[100] w-3/4 max-w-sm shrink-0 bg-white dark:bg-slate-950 shadow-2xl md:shadow-none transition-transform duration-300 ease-in-out md:static md:w-20 lg:w-64 md:translate-x-0 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="h-full flex flex-col md:block md:bg-white md:dark:bg-slate-900 md:rounded-2xl md:border md:border-slate-100 md:dark:border-slate-800 md:p-4 md:sticky md:top-24 overflow-y-auto md:overflow-visible">
+          
+          {/* Mobile Profile Header in Drawer */}
+          <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between md:hidden">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full overflow-hidden bg-brand-500">
+                {user.avatar ? (
+                  <img src={user.avatar} alt="User" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full items-center justify-center text-white text-sm font-bold">
+                    {user.fullName?.[0]?.toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h2 className="font-bold text-slate-900 dark:text-white line-clamp-1">{user.fullName}</h2>
+                <p className="text-xs text-slate-500 line-clamp-1">{user.email}</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Desktop Sidebar Header */}
+          <div className="hidden md:flex mb-6 px-2 lg:px-4 flex-col items-center lg:items-start">
+            <h2 className="hidden lg:block text-lg font-bold text-slate-900 dark:text-white truncate">Dashboard</h2>
+            <div className="lg:hidden h-10 w-10 rounded-full bg-brand-500 overflow-hidden mb-2">
+               {user.avatar ? (
+                  <img src={user.avatar} alt="User" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full items-center justify-center text-white text-sm font-bold">
+                    {user.fullName?.[0]?.toUpperCase()}
+                  </span>
+                )}
+            </div>
+            <p className="hidden lg:block text-sm text-slate-500 dark:text-slate-400 truncate">Welcome back, {user.fullName?.split(' ')[0]}</p>
           </div>
           
-          <nav className="space-y-1">
+          <nav className="flex-1 space-y-1 p-4 md:p-0">
             {tabs.map(tab => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => router.push(`/dashboard?tab=${tab.id}`)}
-                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                  onClick={() => {
+                    router.push(`/dashboard?tab=${tab.id}`);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  title={tab.label}
+                  className={`flex w-full items-center justify-start lg:justify-start gap-3 rounded-xl p-3 md:justify-center lg:px-4 lg:py-3 text-sm font-medium transition-colors ${
                     activeTab === tab.id
                       ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'
                   }`}
                 >
-                  <Icon className="h-5 w-5" />
-                  {tab.label}
+                  <Icon className="h-6 w-6 lg:h-5 lg:w-5 md:h-6 md:w-6" />
+                  <span className="md:hidden lg:block">{tab.label}</span>
                 </button>
               );
             })}

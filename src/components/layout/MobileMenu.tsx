@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { NAV_LINKS } from '@/constants/navigation';
-import { X } from 'lucide-react';
+import { X, LayoutDashboard, LogOut } from 'lucide-react';
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -78,10 +78,28 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                 </Link>
               </li>
             ))}
+            
+            {user && (
+              <li>
+                <Link
+                  href="/dashboard"
+                  onClick={onClose}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors duration-200 mt-2 border-t border-slate-100 dark:border-slate-800 pt-3',
+                    pathname.startsWith('/dashboard')
+                      ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'
+                  )}
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Dashboard
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
 
-        {!user && (
+        {!user ? (
           <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
             <button
               onClick={() => { onClose(); openLoginModal(); }}
@@ -94,6 +112,16 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               className="w-full rounded-xl px-4 py-3 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 transition-colors"
             >
               Register
+            </button>
+          </div>
+        ) : (
+          <div className="p-4 border-t border-slate-100 dark:border-slate-800 mt-auto absolute bottom-14 left-0 right-0">
+             <button
+              onClick={() => { onClose(); useAuth().logout(); }}
+              className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
             </button>
           </div>
         )}
