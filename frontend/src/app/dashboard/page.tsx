@@ -1,0 +1,320 @@
+'use client';
+
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { getMyArticles, deleteArticle } from '@/services/articleService';
+import { getUserBookmarks } from '@/services/bookmarkService';
+import { useFollow } from '@/contexts/FollowContext';
+import type { Article } from '@/types';
+import { LayoutDashboard, BookOpen, PenTool, Bookmark, Settings, FileText, Trash2, Edit, ExternalLink, Menu, X, Bell } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
+
+function DashboardContent() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'overview';
+  
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [bookmarks, setBookmarks] = useState<Article[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { followersCount, followingCount, initializeAuthorState } = useFollow();
+
+  useEffect(() => {
+    setActiveTab(searchParams.get('tab') || 'overview');
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (user) {
+      getMyArticles(user.id).then(setArticles);
+      getUserBookmarks(user.id).then(setBookmarks);
+      initializeAuthorState(user.id);
+    }
+  }, [user, initializeAuthorState]);
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+
+  if (!user) {
+    router.push('/');
+    return null;
+  }
+
+  const publishedArticles = articles.filter(a => a.status === 'PUBLISHED');
+  const draftArticles = articles.filter(a => a.status === 'DRAFT');
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this article?')) {
+      await deleteArticle(id);
+      setArticles(articles.filter(a => a.id !== id));
+    }
+  };
+
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'articles', label: 'My Articles', icon: BookOpen },
+    { id: 'drafts', label: 'Drafts', icon: FileText },
+    { id: 'bookmarks', label: 'Bookmarks', icon: Bookmark },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-20 pt-28 sm:px-6 flex flex-col md:flex-row gap-8">
+      
+      {/* Mobile Header (Only visible on < md) */}
+      <div className="md:hidden flex items-center justify-between bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2 -ml-2 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+          <h1 className="text-lg font-bold text-slate-900 dark:text-white">Dashboard</h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors">
+            <Bell className="h-5 w-5" />
+          </button>
+          <div className="h-8 w-8 rounded-full overflow-hidden bg-brand-500">
+            {user.avatar ? (
+              <Image src={user.avatar} alt="User" width={32} height={32} className="h-full w-full object-cover" />
+            ) : (
+              <span className="flex h-full items-center justify-center text-white text-xs font-bold">
+                {user.fullName?.[0]?.toUpperCase()}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Backdrop for mobile drawer */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] md:hidden transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Responsive Sidebar / Drawer */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-[100] w-3/4 max-w-sm shrink-0 bg-white dark:bg-slate-950 shadow-2xl md:shadow-none transition-transform duration-300 ease-in-out md:static md:w-20 lg:w-64 md:translate-x-0 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="h-full flex flex-col md:block md:bg-white md:dark:bg-slate-900 md:rounded-2xl md:border md:border-slate-100 md:dark:border-slate-800 md:p-4 md:sticky md:top-24 overflow-y-auto md:overflow-visible">
+          
+          {/* Mobile Profile Header in Drawer */}
+          <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between md:hidden">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full overflow-hidden bg-brand-500">
+                {user.avatar ? (
+                  <Image src={user.avatar} alt="User" width={40} height={40} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full items-center justify-center text-white text-sm font-bold">
+                    {user.fullName?.[0]?.toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h2 className="font-bold text-slate-900 dark:text-white line-clamp-1">{user.fullName}</h2>
+                <p className="text-xs text-slate-500 line-clamp-1">{user.email}</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Desktop Sidebar Header */}
+          <div className="hidden md:flex mb-6 px-2 lg:px-4 flex-col items-center lg:items-start">
+            <h2 className="hidden lg:block text-lg font-bold text-slate-900 dark:text-white truncate">Dashboard</h2>
+            <div className="lg:hidden h-10 w-10 rounded-full bg-brand-500 overflow-hidden mb-2">
+               {user.avatar ? (
+                  <Image src={user.avatar} alt="User" width={40} height={40} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full items-center justify-center text-white text-sm font-bold">
+                    {user.fullName?.[0]?.toUpperCase()}
+                  </span>
+                )}
+            </div>
+            <p className="hidden lg:block text-sm text-slate-500 dark:text-slate-400 truncate">Welcome back, {user.fullName?.split(' ')[0]}</p>
+          </div>
+          
+          <nav className="flex-1 space-y-1 p-4 md:p-0">
+            {tabs.map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    router.push(`/dashboard?tab=${tab.id}`);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  title={tab.label}
+                  className={`flex w-full items-center justify-start lg:justify-start gap-3 rounded-xl p-3 md:justify-center lg:px-4 lg:py-3 text-sm font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100'
+                  }`}
+                >
+                  <Icon className="h-6 w-6 lg:h-5 lg:w-5 md:h-6 md:w-6" />
+                  <span className="md:hidden lg:block">{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 p-8 min-h-[60vh]">
+          {activeTab === 'overview' && (
+            <div className="space-y-8 animate-in fade-in">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Overview</h1>
+                <Link href="/write" className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+                  <PenTool className="h-4 w-4" /> Write New
+                </Link>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-6 rounded-2xl bg-brand-50 dark:bg-brand-900/10 border border-brand-100 dark:border-brand-900/20">
+                  <p className="text-sm font-medium text-brand-600 dark:text-brand-400">Total Articles</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{articles.length}</p>
+                </div>
+                <div className="p-6 rounded-2xl bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20">
+                  <p className="text-sm font-medium text-green-600 dark:text-green-400">Total Views</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{articles.reduce((acc, curr) => acc + (curr.views || 0), 0).toLocaleString()}</p>
+                </div>
+                <div className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20">
+                  <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Followers</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{user ? followersCount(user.id).toLocaleString() : 0}</p>
+                </div>
+                <div className="p-6 rounded-2xl bg-violet-50 dark:bg-violet-900/10 border border-violet-100 dark:border-violet-900/20">
+                  <p className="text-sm font-medium text-violet-600 dark:text-violet-400">Drafts</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{draftArticles.length}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'articles' && (
+            <div className="space-y-6 animate-in fade-in">
+              <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Published Articles</h1>
+              </div>
+              <ArticleTable articles={publishedArticles} onDelete={handleDelete} />
+            </div>
+          )}
+
+          {activeTab === 'drafts' && (
+            <div className="space-y-6 animate-in fade-in">
+              <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Drafts</h1>
+              </div>
+              <ArticleTable articles={draftArticles} onDelete={handleDelete} />
+            </div>
+          )}
+
+          {activeTab === 'bookmarks' && (
+            <div className="space-y-6 animate-in fade-in">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Bookmarks</h1>
+              {bookmarks.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {bookmarks.map(article => (
+                    <Link key={article.id} href={`/articles/${article.slug}`} className="block p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <h3 className="font-medium text-slate-900 dark:text-white mb-1 line-clamp-1">{article.title}</h3>
+                      <p className="text-sm text-slate-500 line-clamp-2">{article.description}</p>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-12 text-center text-slate-500 border rounded-2xl dark:border-slate-800">
+                  No bookmarks found.
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="space-y-6 animate-in fade-in">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Settings</h1>
+              <p className="text-slate-500">Settings page coming soon...</p>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading dashboard...</div>}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function ArticleTable({ articles, onDelete }: { articles: Article[], onDelete: (id: string) => void }) {
+  if (articles.length === 0) {
+    return (
+      <div className="p-12 text-center text-slate-500 border border-dashed rounded-2xl dark:border-slate-800">
+        No articles found.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+      <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+        <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-300 font-medium border-b border-slate-200 dark:border-slate-800">
+          <tr>
+            <th className="px-6 py-4">Article</th>
+            <th className="px-6 py-4">Category</th>
+            <th className="px-6 py-4">Views</th>
+            <th className="px-6 py-4">Date</th>
+            <th className="px-6 py-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+          {articles.map((article) => (
+            <tr key={article.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <Image src={article.thumbnail} alt="" width={64} height={40} className="h-10 w-16 object-cover rounded-md shrink-0" />
+                  <div className="font-medium text-slate-900 dark:text-white max-w-xs truncate" title={article.title}>
+                    {article.title}
+                  </div>
+                </div>
+              </td>
+              <td className="px-6 py-4 capitalize">{article.category}</td>
+              <td className="px-6 py-4">{article.views?.toLocaleString() || 0}</td>
+              <td className="px-6 py-4">{new Date(article.publishedAt).toLocaleDateString()}</td>
+              <td className="px-6 py-4 text-right">
+                <div className="flex items-center justify-end gap-2">
+                  <Link href={`/write?id=${article.id}`} className="p-2 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                    <Edit className="h-4 w-4" />
+                  </Link>
+                  <Link href={`/articles/${article.slug}`} className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
+                  <button onClick={() => onDelete(article.id)} className="p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
